@@ -1,14 +1,15 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, Loader2, Tag, Copy, Check } from "lucide-react";
+import { UserPlus, Loader2, Tag, Copy, Check, AlertCircle, CheckCircle2 } from "lucide-react";
 import { apiClient, ApiError } from "@/lib/api";
 import { useToast } from "./ui/toast";
 import { USER_TYPES } from "@/lib/constants";
+import { existenceManager } from "@/lib/bloom";
 
 const userSchema = z.object({
     name: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
@@ -20,14 +21,17 @@ type UserFormData = z.infer<typeof userSchema>;
 
 export function UserForm() {
     const [status, setStatus] = useState<"idle" | "loading">("idle");
+    const [emailStatus, setEmailStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
     const [createdUserId, setCreatedUserId] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const { toast } = useToast();
+    const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
     const {
         register,
         handleSubmit,
         reset,
+        control,
         formState: { errors },
     } = useForm<UserFormData>({
         resolver: zodResolver(userSchema),
@@ -35,6 +39,48 @@ export function UserForm() {
             userType: USER_TYPES[0].id,
         },
     });
+
+    const watchedEmail = useWatch({ control, name: "email" });
+
+    useEffect(() => {
+        if (!watchedEmail) {
+            setEmailStatus("idle");
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(watchedEmail)) {
+            setEmailStatus("invalid");
+            return;
+        }
+
+        setEmailStatus("checking");
+
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+
+        debounceRef.current = setTimeout(async () => {
+            try {
+                // 1. Bloom Filter Check (Instantish)
+                const availability = await existenceManager.checkAvailability(watchedEmail.toLowerCase().trim());
+
+                if (availability === true) {
+                    setEmailStatus("available");
+                    return;
+                }
+
+                // 2. API Check (Final Confirmation)
+                const data = await apiClient.get<{ exists: boolean }>(`/users/check-email?email=${encodeURIComponent(watchedEmail)}`);
+                setEmailStatus(data.exists ? "taken" : "available");
+            } catch (e) {
+                console.error("Real-time check failed", e);
+                setEmailStatus("idle");
+            }
+        }, 600);
+
+        return () => {
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+        };
+    }, [watchedEmail]);
 
     const onSubmit = async (data: UserFormData) => {
         setStatus("loading");
@@ -51,6 +97,10 @@ export function UserForm() {
             setCreatedUserId(response.id);
             setStatus("idle");
             reset();
+            setEmailStatus("idle");
+
+            // Força a atualização do Bloom Filter no frontend para incluir o novo usuário
+            existenceManager.getFilter(true);
         } catch (error) {
             setStatus("idle");
             if (error instanceof ApiError) {
@@ -99,12 +149,34 @@ export function UserForm() {
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground ml-1">E-mail</label>
-                        <input
-                            {...register("email")}
-                            className="w-full px-4 py-3 bg-white/50 border border-border rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50"
-                            placeholder="exemplo@email.com"
-                        />
+                        <div className="relative">
+                            <input
+                                {...register("email")}
+                                className="w-full px-4 py-3 bg-white/50 border border-border rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50 pr-10"
+                                placeholder="exemplo@email.com"
+                            />
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <AnimatePresence mode="wait">
+                                    {emailStatus === "checking" && (
+                                        <motion.div key="checking" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+                                            <Loader2 size={16} className="animate-spin text-muted-foreground" />
+                                        </motion.div>
+                                    )}
+                                    {emailStatus === "available" && (
+                                        <motion.div key="available" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+                                            <CheckCircle2 size={16} className="text-green-500" />
+                                        </motion.div>
+                                    )}
+                                    {emailStatus === "taken" && (
+                                        <motion.div key="taken" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+                                            <AlertCircle size={16} className="text-orange-500" />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
                         {errors.email && <p className="text-xs text-destructive ml-1">{errors.email.message}</p>}
+                        {emailStatus === "taken" && !errors.email && <p className="text-[10px] text-orange-600 ml-1 font-medium">Este e-mail já está em uso por um usuário ativo.</p>}
                     </div>
 
                     <div className="space-y-2">

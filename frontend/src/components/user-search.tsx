@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Loader2, User, Calendar, Mail, Tag, XCircle, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient, ApiError } from "@/lib/api";
 import { getUserType } from "@/lib/constants";
 import { useToast } from "./ui/toast";
+import { existenceManager } from "@/lib/bloom";
 import { ConfirmationModal } from "./ui/confirmation-modal";
 
 interface UserData {
@@ -27,16 +28,16 @@ export function UserSearch() {
     const [errorVisible, setErrorVisible] = useState(false);
     const { toast } = useToast();
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!searchId.trim()) return;
+    const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+    const performSearch = useCallback(async (id: string) => {
+        if (!id.trim()) return;
 
         setStatus("loading");
-
         setErrorVisible(false);
 
         try {
-            const data = await apiClient.get<UserData>(`/users/${searchId}`);
+            const data = await apiClient.get<UserData>(`/users/${id}`);
             setUser(data);
             setStatus("idle");
         } catch (err) {
@@ -44,7 +45,50 @@ export function UserSearch() {
             setStatus("error");
             setErrorVisible(true);
         }
+    }, []);
+
+    const handleSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        performSearch(searchId);
     };
+
+    useEffect(() => {
+        if (!searchId) {
+            setUser(null);
+            setErrorVisible(false);
+            return;
+        }
+
+        // 1. Regex Guard (UUID format)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(searchId)) {
+            setStatus("idle");
+            return;
+        }
+
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+
+        debounceRef.current = setTimeout(async () => {
+            setStatus("loading");
+            // 2. Bloom Filter Check
+            const availability = await existenceManager.checkAvailability(searchId.toLowerCase());
+
+            if (availability === true) {
+                // Definitely does not exist
+                setUser(null);
+                setStatus("error");
+                setErrorVisible(true);
+                return;
+            }
+
+            // 3. Trigger Search
+            performSearch(searchId);
+        }, 500);
+
+        return () => {
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+        };
+    }, [searchId, performSearch]);
 
     const confirmDelete = () => {
         setIsModalOpen(true);

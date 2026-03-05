@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using UserManagementSystem.Api.Database;
 using UserManagementSystem.Api.Infrastructure.ErrorHandling;
 using UserManagementSystem.Api.Infrastructure.Endpoints;
+using UserManagementSystem.Api.Features.Users.Existence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,10 @@ builder.Services.AddCors(options =>
 
 // Descoberta Dinâmica de Endpoints (Vertical Slices architecture)
 builder.Services.AddEndpoints(typeof(Program).Assembly);
+
+// Serviços Bloom Filter e Validação
+builder.Services.AddSingleton<IExistenceFilterService, ExistenceFilterService>();
+builder.Services.AddHostedService<BloomFilterWorker>();
 
 var app = builder.Build();
 
