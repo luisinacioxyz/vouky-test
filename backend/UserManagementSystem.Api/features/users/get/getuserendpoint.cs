@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using UserManagementSystem.Api.Database;
+using UserManagementSystem.Api.Infrastructure.Endpoints;
 
 namespace UserManagementSystem.Api.Features.Users.Get;
 
-public static class GetUserEndpoint
+public class GetUserEndpoint : IEndpoint
 {
-    public static void MapGetUserEndpoint(this IEndpointRouteBuilder app)
+    public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/users/{id:guid}", async (Guid id, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {

@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using UserManagementSystem.Api.Database;
+using UserManagementSystem.Api.Infrastructure.Endpoints;
 
 namespace UserManagementSystem.Api.Features.Users.Delete;
 
-public static class DeleteUserEndpoint
+public class DeleteUserEndpoint : IEndpoint
 {
-    public static void MapDeleteUserEndpoint(this IEndpointRouteBuilder app)
+    public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapDelete("/users/{id:guid}", async (Guid id, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
@@ -14,11 +15,11 @@ public static class DeleteUserEndpoint
 
             if (user is null)
             {
-                [cite_start]// Se não existe ou já foi deletado (DeletedAt != null), retornamos 404 para não vazar a existência do dado 
+                // Se não existe ou já foi deletado (DeletedAt != null), retornamos 404 para não vazar a existência do dado 
                 return Results.NotFound(new { Detail = "Usuário não encontrado ou já removido." });
             }
 
-            [cite_start]// O método SoftDelete garante a regra de negócio 
+            // O método SoftDelete garante a regra de negócio 
             user.SoftDelete();
 
             await dbContext.SaveChangesAsync(cancellationToken);

@@ -60,6 +60,6 @@ public class GlobalExceptionHandler : IExceptionHandler
         httpContext.Response.StatusCode = problemDetails.Status.Value;
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 
-        return true; // Informa ao pipeline que o erro foi devidamente tratado
+        return true; 
     }
 }

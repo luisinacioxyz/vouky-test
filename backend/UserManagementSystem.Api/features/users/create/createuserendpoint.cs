@@ -1,15 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using UserManagementSystem.Api.Database;
 using UserManagementSystem.Api.Domain;
+using UserManagementSystem.Api.Infrastructure.Endpoints;
 
 namespace UserManagementSystem.Api.Features.Users.Create;
 
 // DTO de Entrada (Request) usando Records para imutabilidade e concisão
 public record CreateUserRequest(string Name, string Email, Guid UserType);
 
-public static class CreateUserEndpoint
+public class CreateUserEndpoint : IEndpoint
 {
-    public static void MapCreateUserEndpoint(this IEndpointRouteBuilder app)
+    public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/users", async (CreateUserRequest request, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
