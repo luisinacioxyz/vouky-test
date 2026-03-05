@@ -1,0 +1,15 @@
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: user-management-db
+    environment:
+      POSTGRES_DB: UserManagementDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Vouky#2026
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

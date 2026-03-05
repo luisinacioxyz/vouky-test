@@ -13,10 +13,40 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+// Configuração de CORS para permitir o Frontend
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // Descoberta Dinâmica de Endpoints (Vertical Slices architecture)
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 
 var app = builder.Build();
+
+// Inicialização/Migração automática do Banco de Dados
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    try
+    {
+        // Aplica as migrações pendentes no startup
+        dbContext.Database.Migrate();
+        Console.WriteLine("Banco de Dados inicializado/migrado com sucesso.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erro ao inicializar o Banco de Dados: {ex.Message}");
+    }
+}
+
+// Ativa CORS
+app.UseCors();
 
 // Ativa o middleware de exceção
 app.UseExceptionHandler();

@@ -1,65 +1,84 @@
-import Image from "next/image";
+"use client";
+
+import { UserForm } from "@/components/user-form";
+import { UserSearch } from "@/components/user-search";
+import { motion } from "framer-motion";
+import { Users, ShieldCheck, Zap } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen ivory-gradient selection:bg-primary selection:text-primary-foreground py-12 px-4 md:py-24">
+      <div className="max-w-6xl mx-auto space-y-20">
+
+        {/* Header Section */}
+        <header className="text-center space-y-4 max-w-2xl mx-auto animate-in">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-primary border border-border text-xs font-semibold uppercase tracking-widest mb-2"
+          >
+            <ShieldCheck size={14} />
+            <span>Vouky Administration</span>
+          </motion.div>
+
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-foreground leading-[1.1]">
+            Gestão de <span className="text-muted-foreground/30 italic">Usuários</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p className="text-lg text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
+            Interface administrativa premium para controle de acessos e monitoramento de identidades.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        </header>
+
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+
+          {/* Left Column: Form */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-6"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <div className="flex items-center gap-2 text-muted-foreground/60 mb-2">
+              <Zap size={16} />
+              <span className="text-xs font-bold uppercase tracking-wider">Cadastro Rápido</span>
+            </div>
+            <UserForm />
+          </motion.div>
+
+          {/* Right Column: Search & Stats */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="space-y-6"
           >
-            Documentation
-          </a>
+            <div className="flex items-center gap-2 text-muted-foreground/60 mb-2">
+              <Users size={16} />
+              <span className="text-xs font-bold uppercase tracking-wider">Consulta de Dados</span>
+            </div>
+            <UserSearch />
+
+            {/* Info Card */}
+            <div className="glass p-6 rounded-2xl border border-border/30 bg-white/30 text-sm text-muted-foreground/80 leading-relaxed">
+              <p>
+                <strong>Dica:</strong> Utilize o GUID gerado no cadastro para realizar buscas rápidas.
+                O sistema implementa <em>Soft Delete</em> nativo para garantir a integridade dos dados históricos.
+              </p>
+            </div>
+          </motion.div>
+
         </div>
-      </main>
-    </div>
+
+        {/* Footer */}
+        <footer className="pt-20 border-t border-border/40 text-center">
+          <p className="text-xs font-mono text-muted-foreground opacity-50 uppercase tracking-widest">
+            Vouky User Management System &copy; 2026 • Powered by .NET & Next.js
+          </p>
+        </footer>
+
+      </div>
+    </main>
   );
 }
