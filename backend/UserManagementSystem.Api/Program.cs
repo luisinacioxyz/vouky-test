@@ -20,6 +20,7 @@ app.UseExceptionHandler();
 // Mapeamento de Endpoints
 app.MapCreateUserEndpoint();
 app.MapGetUserEndpoint();
+app.MapDeleteUserEndpoint();
 
 app.MapGet("/", () => "API rodando!");
 
