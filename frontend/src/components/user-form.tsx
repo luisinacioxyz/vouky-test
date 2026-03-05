@@ -5,8 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, Loader2, CheckCircle2, AlertCircle, Tag } from "lucide-react";
+import { UserPlus, Loader2, Tag, Copy, Check } from "lucide-react";
 import { apiClient, ApiError } from "@/lib/api";
+import { useToast } from "./ui/toast";
+import { USER_TYPES } from "@/lib/constants";
 
 const userSchema = z.object({
     name: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
@@ -14,17 +16,13 @@ const userSchema = z.object({
     userType: z.string().uuid("Tipo de usuário inválido (deve ser um GUID)"),
 });
 
-const USER_TYPES = [
-    { id: "00a94b8e-6701-447a-9cf7-9a84594c4838", label: "Usuário Comum" },
-    { id: "8f828741-9430-4e3e-a185-1153118cf972", label: "Administrador" },
-    { id: "1e127339-e932-44f2-9844-469b89793540", label: "Suporte Técnico" },
-];
-
 type UserFormData = z.infer<typeof userSchema>;
 
 export function UserForm() {
-    const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-    const [message, setMessage] = useState("");
+    const [status, setStatus] = useState<"idle" | "loading">("idle");
+    const [createdUserId, setCreatedUserId] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
+    const { toast } = useToast();
 
     const {
         register,
@@ -40,21 +38,42 @@ export function UserForm() {
 
     const onSubmit = async (data: UserFormData) => {
         setStatus("loading");
+        setCreatedUserId(null);
         try {
-            await apiClient.post("/users", data);
+            const response = await apiClient.post<{ id: string }>("/users", data);
 
-            setStatus("success");
-            setMessage("Usuário cadastrado com sucesso!");
+            toast({
+                type: "success",
+                title: "Sucesso!",
+                description: "Usuário cadastrado com sucesso."
+            });
+
+            setCreatedUserId(response.id);
+            setStatus("idle");
             reset();
-            setTimeout(() => setStatus("idle"), 5000);
         } catch (error) {
-            setStatus("error");
+            setStatus("idle");
             if (error instanceof ApiError) {
-                setMessage(error.detail || "Erro ao cadastrar usuário.");
+                toast({
+                    type: "error",
+                    title: "Erro no cadastro",
+                    description: error.detail || "Não foi possível cadastrar o usuário."
+                });
             } else {
-                setMessage("Erro de conexão com o servidor.");
+                toast({
+                    type: "error",
+                    title: "Erro de Conexão",
+                    description: "Não foi possível conectar ao servidor."
+                });
             }
         }
+    };
+
+    const copyToClipboard = () => {
+        if (!createdUserId) return;
+        navigator.clipboard.writeText(createdUserId);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
     return (
@@ -122,25 +141,26 @@ export function UserForm() {
                 </form>
 
                 <AnimatePresence>
-                    {status !== "idle" && status !== "loading" && (
+                    {createdUserId && (
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className={`mt-6 p-4 rounded-xl flex items-start gap-3 ${status === "success"
-                                ? "bg-green-50 border border-green-100 text-green-700"
-                                : "bg-red-50 border border-red-100 text-red-700"
-                                }`}
+                            className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-2"
                         >
-                            {status === "success" ? (
-                                <CheckCircle2 className="shrink-0 mt-0.5" size={18} />
-                            ) : (
-                                <AlertCircle className="shrink-0 mt-0.5" size={18} />
-                            )}
-                            <div className="text-sm">
-                                <p className="font-semibold">{status === "success" ? "Sucesso!" : "Ops!"}</p>
-                                <p className="opacity-90">{message}</p>
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs font-medium text-primary uppercase tracking-wider">ID do Novo Usuário</span>
+                                <button
+                                    onClick={copyToClipboard}
+                                    className="p-1.5 hover:bg-primary/10 rounded-lg transition-colors text-primary flex items-center gap-1.5 text-xs font-semibold"
+                                >
+                                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                                    {copied ? "Copiado" : "Copiar"}
+                                </button>
                             </div>
+                            <p className="font-mono text-[10px] break-all bg-white/50 p-2 rounded-lg border border-border/50 text-muted-foreground">
+                                {createdUserId}
+                            </p>
                         </motion.div>
                     )}
                 </AnimatePresence>

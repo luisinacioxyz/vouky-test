@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "Interface premium para gerenciamento de usuários ativos e inativos.",
 };
 
+import { ToastProvider } from "@/components/ui/toast";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -20,8 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${outfit.variable} font-sans antialiased`}>
-        {children}
+      <body className={`${outfit.variable} font-sans antialiased text-foreground bg-background`}>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

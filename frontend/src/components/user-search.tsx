@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Loader2, User, Calendar, Mail, Tag, XCircle } from "lucide-react";
+import { Search, Loader2, User, Calendar, Mail, Tag, XCircle, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient, ApiError } from "@/lib/api";
+import { getUserType } from "@/lib/constants";
+import { useToast } from "./ui/toast";
+import { ConfirmationModal } from "./ui/confirmation-modal";
 
 interface UserData {
     id: string;
@@ -12,39 +15,24 @@ interface UserData {
     userType: string;
     createdAt: string;
     updatedAt?: string;
-}
-
-function UserSkeleton() {
-    return (
-        <div className="bg-white border border-border p-6 rounded-2xl shadow-sm animate-pulse space-y-4">
-            <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-secondary" />
-                <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-secondary rounded w-1/3" />
-                    <div className="h-3 bg-secondary rounded w-1/2 opacity-50" />
-                </div>
-            </div>
-            <div className="pt-4 border-t border-dashed border-border space-y-3">
-                <div className="h-3 bg-secondary rounded w-3/4" />
-                <div className="h-3 bg-secondary rounded w-1/2" />
-                <div className="h-2 bg-secondary rounded w-1/4 mt-4" />
-            </div>
-        </div>
-    );
+    deletedAt?: string | null;
 }
 
 export function UserSearch() {
     const [searchId, setSearchId] = useState("");
     const [user, setUser] = useState<UserData | null>(null);
     const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [errorVisible, setErrorVisible] = useState(false);
+    const { toast } = useToast();
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!searchId.trim()) return;
 
         setStatus("loading");
-        setUser(null);
+
         setErrorVisible(false);
 
         try {
@@ -52,8 +40,38 @@ export function UserSearch() {
             setUser(data);
             setStatus("idle");
         } catch (err) {
+            setUser(null);
             setStatus("error");
             setErrorVisible(true);
+        }
+    };
+
+    const confirmDelete = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async () => {
+        if (!user || isDeleting) return;
+
+        setIsDeleting(true);
+        try {
+            await apiClient.delete(`/users/${user.id}`);
+            toast({
+                type: "success",
+                title: "Usuário Excluído",
+                description: `O usuário ${user.name} foi removido com sucesso.`
+            });
+            setUser(null);
+            setSearchId("");
+            setIsModalOpen(false);
+        } catch (err) {
+            toast({
+                type: "error",
+                title: "Erro ao Excluir",
+                description: "Não foi possível excluir o usuário."
+            });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -72,7 +90,7 @@ export function UserSearch() {
                         type="text"
                         value={searchId}
                         onChange={(e) => setSearchId(e.target.value)}
-                        className="w-full pl-12 pr-4 py-4 bg-white/50 border border-border rounded-2xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50 font-mono text-sm"
+                        className="w-full pl-12 pr-32 py-4 bg-white/50 border border-border rounded-2xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50 font-mono text-sm"
                         placeholder="Insira o ID (GUID)"
                     />
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
@@ -101,17 +119,6 @@ export function UserSearch() {
             </div>
 
             <AnimatePresence mode="wait">
-                {status === "loading" && (
-                    <motion.div
-                        key="skeleton"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                    >
-                        <UserSkeleton />
-                    </motion.div>
-                )}
-
                 {user && (
                     <motion.div
                         key="user-card"
@@ -129,10 +136,18 @@ export function UserSearch() {
                                 <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-primary font-bold text-lg">
                                     {user.name.charAt(0)}
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <h3 className="font-bold text-lg leading-tight">{user.name}</h3>
                                     <p className="text-xs font-mono text-muted-foreground">{user.id}</p>
                                 </div>
+                                <button
+                                    onClick={confirmDelete}
+                                    disabled={isDeleting}
+                                    className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 disabled:opacity-50"
+                                    title="Excluir Usuário"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
                             </div>
 
                             <div className="grid grid-cols-1 gap-3 pt-4 border-t border-dashed border-border">
@@ -142,8 +157,8 @@ export function UserSearch() {
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-foreground/80">
                                     <Tag size={14} className="text-muted-foreground" />
-                                    <span className="text-xs px-2 py-0.5 bg-secondary rounded-full border border-border">
-                                        Tipo: {user.userType}
+                                    <span className={`text-xs px-2.5 py-1 rounded-full border ${getUserType(user.userType).color} font-medium`}>
+                                        {getUserType(user.userType).label}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
@@ -155,6 +170,20 @@ export function UserSearch() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {user && (
+                <ConfirmationModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onConfirm={handleDelete}
+                    isLoading={isDeleting}
+                    isDestructive
+                    title="Excluir Usuário"
+                    description={`Você está prestes a realizar a exclusão do usuário "${user.name}". Ele não será mais retornado em buscas ativas. Deseja continuar?`}
+                    confirmText="Sim, excluir"
+                    cancelText="Voltar"
+                />
+            )}
         </section>
     );
 }
