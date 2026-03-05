@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Zs5bT94laeU=",
+  "dgSpecHash": "1pcSp+xT0Sw=",
   "success": true,
-  "projectFilePath": "C:\\Users\\sankh\\OneDrive\\Documentos\\vouky-test\\backend\\UserManagementSystem.Tests\\UserManagementSystem.Tests.csproj",
+  "projectFilePath": "C:\\Users\\sankh\\OneDrive\\Área de Trabalho\\vouky-test\\backend\\UserManagementSystem.Tests\\UserManagementSystem.Tests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\sankh\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
     "C:\\Users\\sankh\\.nuget\\packages\\coverlet.collector\\6.0.4\\coverlet.collector.6.0.4.nupkg.sha512",

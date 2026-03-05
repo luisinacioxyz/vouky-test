@@ -1969,11 +1969,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\sankh\\OneDrive\\Documentos\\vouky-test\\backend\\UserManagementSystem.Tests\\UserManagementSystem.Tests.csproj",
+      "projectUniqueName": "C:\\Users\\sankh\\OneDrive\\Área de Trabalho\\vouky-test\\backend\\UserManagementSystem.Tests\\UserManagementSystem.Tests.csproj",
       "projectName": "UserManagementSystem.Tests",
-      "projectPath": "C:\\Users\\sankh\\OneDrive\\Documentos\\vouky-test\\backend\\UserManagementSystem.Tests\\UserManagementSystem.Tests.csproj",
+      "projectPath": "C:\\Users\\sankh\\OneDrive\\Área de Trabalho\\vouky-test\\backend\\UserManagementSystem.Tests\\UserManagementSystem.Tests.csproj",
       "packagesPath": "C:\\Users\\sankh\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\sankh\\OneDrive\\Documentos\\vouky-test\\backend\\UserManagementSystem.Tests\\obj\\",
+      "outputPath": "C:\\Users\\sankh\\OneDrive\\Área de Trabalho\\vouky-test\\backend\\UserManagementSystem.Tests\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\sankh\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -1988,8 +1988,8 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
-            "C:\\Users\\sankh\\OneDrive\\Documentos\\vouky-test\\backend\\UserManagementSystem.Api\\UserManagementSystem.Api.csproj": {
-              "projectPath": "C:\\Users\\sankh\\OneDrive\\Documentos\\vouky-test\\backend\\UserManagementSystem.Api\\UserManagementSystem.Api.csproj"
+            "C:\\Users\\sankh\\OneDrive\\Área de Trabalho\\vouky-test\\backend\\UserManagementSystem.Api\\UserManagementSystem.Api.csproj": {
+              "projectPath": "C:\\Users\\sankh\\OneDrive\\Área de Trabalho\\vouky-test\\backend\\UserManagementSystem.Api\\UserManagementSystem.Api.csproj"
             }
           }
         }
