@@ -17,6 +17,10 @@ var app = builder.Build();
 // Ativa o middleware de exceção
 app.UseExceptionHandler();
 
+// Mapeamento de Endpoints
+app.MapCreateUserEndpoint();
+app.MapGetUserEndpoint();
+
 app.MapGet("/", () => "API rodando!");
 
 app.Run();
